@@ -1,0 +1,31 @@
+__pycache__
+.cache
+*.swp
+ci/coverage.xml
+dist
+tags
+cscope.*
+.vscode/
+# cache
+.cache
+# build folders
+build
+*.egg-info
+# tao peoplenet files
+*.fp16
+*.onnx
+# NSight profiler files
+*.ncu-rep
+*.nsys-rep
+# Configurator files
+configurator/build
+configurator/meta-openembedded
+configurator/poky
+spi-vm.log
+spi-vm.pid
+
+# Emulation files
+src/hololink/emulation/test_emulator_hsb
+*.o
+dlpack.h
+
