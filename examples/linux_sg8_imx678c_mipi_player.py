@@ -139,10 +139,11 @@ class HoloscanApplication(holoscan.core.Application):
 
         #
         self.add_flow(receiver_operator, csi_to_bayer_operator, {("output", "input")})
-        self.add_flow(
-            csi_to_bayer_operator, image_processor_operator, {("output", "input")}
-        )
-        self.add_flow(image_processor_operator, demosaic, {("output", "receiver")})
+        # self.add_flow(
+        #     csi_to_bayer_operator, image_processor_operator, {("output", "input")}
+        # )
+        # self.add_flow(image_processor_operator, demosaic, {("output", "receiver")})
+        self.add_flow(csi_to_bayer_operator, demosaic, {("output", "receiver")})
         self.add_flow(demosaic, visualizer, {("transmitter", "receivers")})
 
 
@@ -229,8 +230,16 @@ def main():
     hololink.reset()
     camera.setup_clock()
     camera.get_register(0x1a, 0x3000)
+
     camera.configure(camera_mode)
+    camera.set_register(0x1a, 0x3050,0x00)
+    camera.set_register(0x1a, 0x3051,0x08)
+    camera.set_register(0x1a, 0x3052,0x0)
+    
     application.run()
+
+
+
     hololink.stop()
 
     (cu_result,) = cuda.cuDevicePrimaryCtxRelease(cu_device)

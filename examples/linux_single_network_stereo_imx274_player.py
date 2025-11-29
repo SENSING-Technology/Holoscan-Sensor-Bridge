@@ -320,7 +320,7 @@ def main():
     channel_metadata_left = hololink_module.Metadata(channel_metadata)
     hololink_module.DataChannel.use_sensor(channel_metadata_left, 0)
     channel_metadata_right = hololink_module.Metadata(channel_metadata)
-    hololink_module.DataChannel.use_sensor(channel_metadata_right, 1)
+    hololink_module.DataChannel.use_sensor(channel_metadata_right, 2)
     #
     hololink_channel_left = hololink_module.DataChannel(channel_metadata_left)
     hololink_channel_right = hololink_module.DataChannel(channel_metadata_right)

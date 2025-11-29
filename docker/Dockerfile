@@ -21,13 +21,14 @@ ARG CONTAINER_TYPE=invalid
 FROM nvcr.io/nvidia/clara-holoscan/holoscan:v3.3.0-dgpu AS build_dgpu
 
 # igpu specific configuration goes here.
-FROM nvcr.io/nvidia/clara-holoscan/holoscan:v3.3.0-igpu AS build_igpu
+#FROM nvcr.io/nvidia/clara-holoscan/holoscan:v3.3.0-igpu AS build_igpu
+FROM nvcr.io/nvidia/clara-holoscan/holoscan:v3.7.0-cuda13 AS build_igpu
 RUN \
     # EGL and libGLESv2 is needed by Argus api otherwise the library throws error \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y -q libgles2-mesa-dev && \
-    echo "deb https://repo.download.nvidia.com/jetson/common r38.2 main" > /etc/apt/sources.list.d/nvidia-l4t-apt-source.list && \
-    echo "deb https://repo.download.nvidia.com/jetson/som r38.2 main" >> /etc/apt/sources.list.d/nvidia-l4t-apt-source.list && \
+    echo "deb https://repo.download.nvidia.com/jetson/common r36.3 main" > /etc/apt/sources.list.d/nvidia-l4t-apt-source.list && \
+    echo "deb https://repo.download.nvidia.com/jetson/t234 r36.3 main" >> /etc/apt/sources.list.d/nvidia-l4t-apt-source.list && \
     wget -O - https://repo.download.nvidia.com/jetson/jetson-ota-public.asc | apt-key add - && \
     apt-get update && \
     # we do not have the permission to ./mm-api/DEBIAN/postinst \

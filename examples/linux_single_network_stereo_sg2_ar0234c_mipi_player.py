@@ -19,12 +19,36 @@ import argparse
 import ctypes
 import logging
 import os
+import time
 
 import holoscan
 from cuda import cuda
 
 import hololink as hololink_module
 
+class TimestampPrinterOp(holoscan.core.Operator):
+    """Custom operator to print timestamps from tensor metadata."""
+
+    def __init__(self, fragment, *args, name="timestamp_printer", **kwargs):
+        self.camera_name = kwargs.pop("camera_name", "unknown")
+        super().__init__(fragment, *args, name=name, **kwargs)
+        self.frame_count = 0
+
+    def setup(self, spec):
+        spec.input("input")
+        spec.output("output")
+
+    def compute(self, op_input, op_output, context):
+        message = op_input.receive("input")
+        self.frame_count += 1
+        timestamp_s = self.metadata.get("timestamp_s", 0)
+        timestamp_ns = self.metadata.get("timestamp_ns", 0)
+        total_seconds = timestamp_s + timestamp_ns / 1_000_000_000.0
+        logging.info(
+            f"[{self.camera_name}] Frame {self.frame_count}: "
+            f"timestamp={total_seconds:.9f}"
+        )
+        op_output.emit(message, "output")
 
 class HoloscanApplication(holoscan.core.Application):
     def __init__(
@@ -41,6 +65,7 @@ class HoloscanApplication(holoscan.core.Application):
         window_height,
         window_width,
         window_title,
+        print_time,
     ):
         logging.info("__init__")
         super().__init__()
@@ -56,6 +81,7 @@ class HoloscanApplication(holoscan.core.Application):
         self._window_height = window_height
         self._window_width = window_width
         self._window_title = window_title
+        self._print_time = print_time
         # These are HSDK controls-- because we have stereo
         # camera paths going into the same visualizer, don't
         # raise an error when each path present metadata
@@ -228,12 +254,29 @@ class HoloscanApplication(holoscan.core.Application):
             window_title=self._window_title,
         )
         #
-        self.add_flow(
-            receiver_operator_left, csi_to_bayer_operator_left, {("output", "input")}
-        )
-        self.add_flow(
-            receiver_operator_right, csi_to_bayer_operator_right, {("output", "input")}
-        )
+        timestamp_printers = []
+        if self._print_time:
+            timestamp_printers.append(
+                TimestampPrinterOp(                        
+                    self, 
+                    name=f"timestamp_printer_left", 
+                    camera_name=f"left"
+                )
+            )
+            timestamp_printers.append(
+                TimestampPrinterOp(                        
+                    self, 
+                    name=f"timestamp_printer_right", 
+                    camera_name=f"right"
+                )
+            )
+            self.add_flow(receiver_operator_left, timestamp_printers[0], {("output", "input")})
+            self.add_flow(timestamp_printers[0], csi_to_bayer_operator_left, {("output", "input")})
+            self.add_flow(receiver_operator_right, timestamp_printers[1], {("output", "input")})
+            self.add_flow(timestamp_printers[1], csi_to_bayer_operator_right, {("output", "input")})
+        else:
+            self.add_flow(receiver_operator_left, csi_to_bayer_operator_left, {("output", "input")})
+            self.add_flow(receiver_operator_right, csi_to_bayer_operator_right, {("output", "input")})
         self.add_flow(
             csi_to_bayer_operator_left, image_processor_left, {("output", "input")}
         )
@@ -296,6 +339,22 @@ def main():
         "--title",
         help="Set the window title",
     )
+    parser.add_argument(
+        "--trigger",
+        action="store_true",
+        help="Run in trigger mode",
+    )
+    parser.add_argument(
+        "--frequency",
+        type=int,
+        default=30,
+        help="VSYNC frequency in Hz (10, 30, 60, 90, 120). Default is 30Hz",
+    )
+    parser.add_argument(
+        "--print-time",
+        action="store_true",
+        help="Print timestamp information for received frames",
+    )
     args = parser.parse_args()
     hololink_module.logging_level(args.log_level)
     logging.info("Initializing.")
@@ -318,16 +377,25 @@ def main():
     channel_metadata_left = hololink_module.Metadata(channel_metadata)
     hololink_module.DataChannel.use_sensor(channel_metadata_left, 0)
     channel_metadata_right = hololink_module.Metadata(channel_metadata)
-    hololink_module.DataChannel.use_sensor(channel_metadata_right, 1)
+    hololink_module.DataChannel.use_sensor(channel_metadata_right, 2)
     #
     hololink_channel_left = hololink_module.DataChannel(channel_metadata_left)
     hololink_channel_right = hololink_module.DataChannel(channel_metadata_right)
+
+    hololink_channels = [hololink_channel_left, hololink_channel_right]
+    hololink = hololink_channels[0].hololink()
+    for channel in hololink_channels[1:]:
+        assert hololink is channel.hololink()
+
+    vsync = hololink_module.Synchronizer.null_synchronizer()
+    if args.trigger:
+        vsync = hololink.ptp_pps_output(args.frequency)
     # Get a handle to the camera
     camera_left = hololink_module.sensors.sg2_ar0234c_mipi.sg2_ar0234c_mipi.Ar0234Cam(
-        hololink_channel_left, expander_configuration=0
+        hololink_channel_left, expander_configuration=0, vsync=vsync,
     )
     camera_right = hololink_module.sensors.sg2_ar0234c_mipi.sg2_ar0234c_mipi.Ar0234Cam(
-        hololink_channel_right, expander_configuration=1
+        hololink_channel_right, expander_configuration=1, vsync=vsync,
     )
     camera_mode = hololink_module.sensors.sg2_ar0234c_mipi.sg2_ar0234c_mipi_mode.Sensor_Mode(
         args.camera_mode
@@ -350,6 +418,7 @@ def main():
         args.window_height,
         args.window_width,
         window_title,
+        args.print_time,
     )
     application.config(args.configuration)
     # Run it.

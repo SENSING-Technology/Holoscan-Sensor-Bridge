@@ -1,0 +1,293 @@
+"""
+SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
+from collections import namedtuple
+from enum import Enum
+
+import hololink
+
+# values are on hex number system to be consistent with rest of the list
+SENSOR_TABLE_WAIT_MS = "sensor-table-wait-ms"
+SENSOR_WAIT_MS = 100
+
+# I2C address
+DSER_I2C_ADDRESS = 0x48
+
+SER_DEF_I2C_ADDRESS = 0x40
+SER_0_I2C_ADDRESS = 0x41
+SER_1_I2C_ADDRESS = 0x42
+
+SENSOR_DEF_I2C_ADDRESS = 0x10
+SENSOR_0_I2C_ADDRESS = 0x11
+SENSOR_1_I2C_ADDRESS = 0x12
+
+# Exposure
+REG_EXP_SHS1_ADDR_MSB = 0xABEE
+REG_EXP_SHS1_ADDR_MID = 0xABED
+REG_EXP_SHS1_ADDR_LSB = 0xABEC
+REG_EXP_SHS2_ADDR_MSB = 0x0012
+REG_EXP_SHS2_ADDR_MID = 0x0011
+REG_EXP_SHS2_ADDR_LSB = 0x0010
+
+# Analog Gain
+REG_AG_MSB = 0x3060
+REG_AG_LSB = 0x3061
+
+sensor_start = [
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301A, 0x20 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301B, 0x5C ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, SENSOR_WAIT_MS ),
+    ( SER_DEF_I2C_ADDRESS, 0x0002, 0x43 ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, SENSOR_WAIT_MS ),
+]
+
+sensor_stop = [
+    ( SER_DEF_I2C_ADDRESS, 0x0002, 0x03 ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, SENSOR_WAIT_MS ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301A, 0x20 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301B, 0x58 ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, SENSOR_WAIT_MS ),
+]
+
+serdes_config_front = [
+    ( DSER_I2C_ADDRESS, 0x0313, 0x00 ),
+    ( DSER_I2C_ADDRESS, 0x0001, 0x02 ),
+
+    ( DSER_I2C_ADDRESS, 0x0010, 0x21 ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, SENSOR_WAIT_MS ),
+    ( SER_DEF_I2C_ADDRESS, 0x0000, SER_0_I2C_ADDRESS*2 ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, SENSOR_WAIT_MS ),
+    ( SER_0_I2C_ADDRESS, 0x007B, 0x41 ),    # do not remove
+    ( SER_0_I2C_ADDRESS, 0x0083, 0x41 ),    # do not remove
+    ( SER_0_I2C_ADDRESS, 0x008B, 0x41 ),    # do not remove
+    ( SER_0_I2C_ADDRESS, 0x0093, 0x41 ),    # do not remove
+    ( SER_0_I2C_ADDRESS, 0x00A3, 0x41 ),    # do not remove
+    ( SER_0_I2C_ADDRESS, 0x00AB, 0x41 ),    # do not remove
+    ( SER_0_I2C_ADDRESS, 0x02BE, 0x10 ),    # sensor reset
+    ( SER_0_I2C_ADDRESS, 0x0002, 0x03 ),
+    ( SER_0_I2C_ADDRESS, 0x0330, 0x00 ),
+    ( SER_0_I2C_ADDRESS, 0x0331, 0x30 ),
+    ( SER_0_I2C_ADDRESS, 0x0332, 0xE0 ),
+    ( SER_0_I2C_ADDRESS, 0x0333, 0x04 ),
+    ( SER_0_I2C_ADDRESS, 0x0334, 0x00 ),
+    ( SER_0_I2C_ADDRESS, 0x0335, 0x00 ),
+    ( SER_0_I2C_ADDRESS, 0x0308, 0x64 ),
+    ( SER_0_I2C_ADDRESS, 0x0311, 0x40 ),
+    # raw12
+    ( SER_0_I2C_ADDRESS, 0x0318, 0x6C ),
+    ( SER_0_I2C_ADDRESS, 0x0315, 0x80 ),
+    ( SER_0_I2C_ADDRESS, 0x030D, 0x01 ),
+    ( SER_0_I2C_ADDRESS, 0x0313, 0x40 ),
+    ( SER_0_I2C_ADDRESS, 0x031E, 0x38 ),
+    ( SER_0_I2C_ADDRESS, 0x0053, 0x02 ),
+    ( SER_0_I2C_ADDRESS, 0x005B, 0x00 ),
+    # sensor i2c address
+    ( SER_0_I2C_ADDRESS, 0x0042, SENSOR_0_I2C_ADDRESS*2 ),
+    ( SER_0_I2C_ADDRESS, 0x0043, SENSOR_DEF_I2C_ADDRESS*2 ),
+    #sync
+    ( SER_0_I2C_ADDRESS, 0x02D3, 0x04 ),
+    ( SER_0_I2C_ADDRESS, 0x02D5, 0x07 ),
+
+    ( DSER_I2C_ADDRESS, 0x0050, 0x00 ),
+    ( DSER_I2C_ADDRESS, 0x040B, 0x07 ),
+    ( DSER_I2C_ADDRESS, 0x040C, 0x00 ),
+    ( DSER_I2C_ADDRESS, 0x040D, 0x2C ),
+    ( DSER_I2C_ADDRESS, 0x040E, 0x2C ),
+    ( DSER_I2C_ADDRESS, 0x040F, 0x00 ),
+    ( DSER_I2C_ADDRESS, 0x0410, 0x00 ),
+    ( DSER_I2C_ADDRESS, 0x0411, 0x01 ),
+    ( DSER_I2C_ADDRESS, 0x0412, 0x01 ),
+    ( DSER_I2C_ADDRESS, 0x042D, 0x15 ),
+
+    ( DSER_I2C_ADDRESS, 0x0473, 0x01 ),
+    ( DSER_I2C_ADDRESS, 0x0330, 0x04 ),
+    ( DSER_I2C_ADDRESS, 0x044A, 0xD0 ),
+    ( DSER_I2C_ADDRESS, 0x0333, 0x4E ),
+    ( DSER_I2C_ADDRESS, 0x0335, 0x00 ),
+    ( DSER_I2C_ADDRESS, 0x1D00, 0xF4 ),
+    ( DSER_I2C_ADDRESS, 0x0320, 0x2F ),
+    ( DSER_I2C_ADDRESS, 0x1D00, 0xF5 ),
+    ( DSER_I2C_ADDRESS, 0x0332, 0x30 ),
+    ( DSER_I2C_ADDRESS, 0x0325, 0x80 ),
+    ( DSER_I2C_ADDRESS, 0x0313, 0x02 ),
+    #sync
+    ( DSER_I2C_ADDRESS, 0x0003, 0x40 ),
+    ( DSER_I2C_ADDRESS, 0x02BF, 0x83 ),
+    ( DSER_I2C_ADDRESS, 0x02C0, 0xA7 ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, SENSOR_WAIT_MS ),
+]
+
+serdes_config_back = [
+    ( DSER_I2C_ADDRESS, 0x0313, 0x00 ),
+    ( DSER_I2C_ADDRESS, 0x0001, 0x02 ),
+
+    ( DSER_I2C_ADDRESS, 0x0010, 0x22 ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, SENSOR_WAIT_MS ),
+    ( SER_DEF_I2C_ADDRESS, 0x0000, SER_1_I2C_ADDRESS*2 ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, SENSOR_WAIT_MS ),
+    ( SER_1_I2C_ADDRESS, 0x007B, 0x42 ),    # do not remove
+    ( SER_1_I2C_ADDRESS, 0x0083, 0x42 ),    # do not remove
+    ( SER_1_I2C_ADDRESS, 0x008B, 0x42 ),    # do not remove
+    ( SER_1_I2C_ADDRESS, 0x0093, 0x42 ),    # do not remove
+    ( SER_1_I2C_ADDRESS, 0x00A3, 0x42 ),    # do not remove
+    ( SER_1_I2C_ADDRESS, 0x00AB, 0x42 ),    # do not remove
+    ( SER_1_I2C_ADDRESS, 0x02BE, 0x10 ),    # sensor reset
+    ( SER_1_I2C_ADDRESS, 0x0002, 0x03 ),
+    ( SER_1_I2C_ADDRESS, 0x0330, 0x00 ),
+    ( SER_1_I2C_ADDRESS, 0x0331, 0x30 ),
+    ( SER_1_I2C_ADDRESS, 0x0332, 0xE0 ),
+    ( SER_1_I2C_ADDRESS, 0x0333, 0x04 ),
+    ( SER_1_I2C_ADDRESS, 0x0334, 0x00 ),
+    ( SER_1_I2C_ADDRESS, 0x0335, 0x00 ),
+    ( SER_1_I2C_ADDRESS, 0x0308, 0x64 ),
+    ( SER_1_I2C_ADDRESS, 0x0311, 0x40 ),
+    # raw12
+    ( SER_1_I2C_ADDRESS, 0x0318, 0x6C ),
+    ( SER_1_I2C_ADDRESS, 0x0315, 0x80 ),
+    ( SER_1_I2C_ADDRESS, 0x030D, 0x01 ),
+    ( SER_1_I2C_ADDRESS, 0x0313, 0x40 ),
+    ( SER_1_I2C_ADDRESS, 0x031E, 0x38 ),
+    ( SER_1_I2C_ADDRESS, 0x0057, 0x02 ),
+    ( SER_1_I2C_ADDRESS, 0x005B, 0x01 ),
+    # sensor i2c address
+    ( SER_1_I2C_ADDRESS, 0x0042, SENSOR_1_I2C_ADDRESS*2 ),
+    ( SER_1_I2C_ADDRESS, 0x0043, SENSOR_DEF_I2C_ADDRESS*2 ),
+    #sync
+    ( SER_1_I2C_ADDRESS, 0x02D3, 0x04 ),
+    ( SER_1_I2C_ADDRESS, 0x02D5, 0x07 ),
+
+    ( DSER_I2C_ADDRESS, 0x0051, 0x01 ),
+    ( DSER_I2C_ADDRESS, 0x044B, 0x07 ),
+    ( DSER_I2C_ADDRESS, 0x044C, 0x00 ),
+    ( DSER_I2C_ADDRESS, 0x044D, 0x2C ),
+    ( DSER_I2C_ADDRESS, 0x044E, 0x6C ),
+    ( DSER_I2C_ADDRESS, 0x044F, 0x00 ),
+    ( DSER_I2C_ADDRESS, 0x0450, 0x40 ),
+    ( DSER_I2C_ADDRESS, 0x0451, 0x01 ),
+    ( DSER_I2C_ADDRESS, 0x0452, 0x41 ),
+    ( DSER_I2C_ADDRESS, 0x046D, 0x15 ),
+
+    ( DSER_I2C_ADDRESS, 0x0473, 0x01 ),
+    ( DSER_I2C_ADDRESS, 0x0330, 0x04 ),
+    ( DSER_I2C_ADDRESS, 0x044A, 0xD0 ),
+    ( DSER_I2C_ADDRESS, 0x0333, 0x4E ),
+    ( DSER_I2C_ADDRESS, 0x0335, 0x00 ),
+    ( DSER_I2C_ADDRESS, 0x1D00, 0xF4 ),
+    ( DSER_I2C_ADDRESS, 0x0320, 0x2F ),
+    ( DSER_I2C_ADDRESS, 0x1D00, 0xF5 ),
+    ( DSER_I2C_ADDRESS, 0x0332, 0x30 ),
+    ( DSER_I2C_ADDRESS, 0x0325, 0x80 ),
+    ( DSER_I2C_ADDRESS, 0x0313, 0x02 ),
+     #sync
+    ( DSER_I2C_ADDRESS, 0x0003, 0x40 ),
+    ( DSER_I2C_ADDRESS, 0x02BF, 0x83 ),
+    ( DSER_I2C_ADDRESS, 0x02C0, 0xA7 ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, SENSOR_WAIT_MS ),
+]
+
+sensor_mode_1920x1200_raw12_4lane_30fps_linear = [
+    ( SENSOR_DEF_I2C_ADDRESS, 0x302A, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x302B, 0x06 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x302C, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x302D, 0x01 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x302E, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x302F, 0x04 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3030, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3031, 0x5A ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3036, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3037, 0x0C ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3038, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3039, 0x01 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31B0, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31B1, 0x67 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31B2, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31B3, 0x34 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31B4, 0x22 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31B5, 0x48 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31B6, 0x32 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31B7, 0x5A ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31B8, 0x90 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31B9, 0x4A ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31BA, 0x02 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31BB, 0x8B ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31BC, 0x8E ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31BD, 0x09 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3354, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3355, 0x2C ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301A, 0x20 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301B, 0x58 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31AE, 0x02 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31AF, 0x04 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3002, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3003, 0x08 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3004, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3005, 0x08 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3006, 0x04 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3007, 0xB7 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3008, 0x07 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3009, 0x87 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x300A, 0x04 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x300B, 0xC0 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x300C, 0x09 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x300D, 0xA3 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3012, 0x04 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3013, 0xBF ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31AC, 0x0C ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31AD, 0x0C ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x306E, 0x90 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x306F, 0x10 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x30A2, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x30A3, 0x01 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x30A6, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x30A7, 0x01 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3082, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3083, 0x03 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3040, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x3041, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31D0, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x31D1, 0x00 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301A, 0x20 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301B, 0x58 ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, SENSOR_WAIT_MS ),
+]
+
+sensor_enable_sync = [
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301A, 0x20 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301B, 0x58 ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, 100 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301A, 0x20 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301B, 0x5C ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301A, 0x21 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301B, 0x5C ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301A, 0x29 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x301B, 0x5C ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x30CE, 0x01 ),
+    ( SENSOR_DEF_I2C_ADDRESS, 0x30CF, 0x00 ),
+]
+
+class Sensor_Mode(Enum):
+    sensor_mode_1920x1200_raw12_4lane_30fps_linear = 0
+    Unknown = 1
+
+frame_format = namedtuple(
+    "FrameFormat", ["width", "height", "framerate", "pixel_format"]
+)
+
+sensor_frame_format = {
+    Sensor_Mode.sensor_mode_1920x1200_raw12_4lane_30fps_linear.value: frame_format(1920, 1200, 30, hololink.sensors.csi.PixelFormat.RAW_12),
+}
+

@@ -27,13 +27,15 @@ from . import li_i2c_expander, sg2_ar0234c_mipi_mode
 DRIVER_NAME = "SG2_AR0234C_MIPI"
 VERSION = 1.0
 
-class Ar0234Cam:
+class Ar0234Cam(hololink_module.Synchronizable):
     def __init__(
         self,
         hololink_channel,
         i2c_bus=hololink_module.CAM_I2C_BUS,
         expander_configuration=0,
+        vsync=hololink_module.Synchronizer.null_synchronizer(),
     ):
+        super().__init__()
         self._hololink_channel = hololink_channel
         self._hololink = hololink_channel.hololink()
         self._i2c_bus = i2c_bus
@@ -50,6 +52,7 @@ class Ar0234Cam:
             self._i2c_expander_configuration = (
                 li_i2c_expander.I2C_Expander_Output_EN.OUTPUT_1
             )
+        self._vsync = vsync
 
     def setup_clock(self):
         # set the clock driver.
@@ -70,16 +73,21 @@ class Ar0234Cam:
     def start(self):
         """Start Streaming"""
         self._running = True
-        #
+        self._vsync.attach(self)
         # Setting these register is time-consuming.
         for i2c_addr, reg, val in sg2_ar0234c_mipi_mode.sensor_start:
             if i2c_addr == sg2_ar0234c_mipi_mode.SENSOR_TABLE_WAIT_MS:
                 time.sleep(val / 1000)  # the val is in ms
+            elif i2c_addr == sg2_ar0234c_mipi_mode.SENSOR_I2C_ADDRESS:
+                self.set_register(i2c_addr, reg, val)
             else:
+                if reg == 0x301A and (self._vsync.is_enabled()):
+                    val = 0x29
                 self.set_register(i2c_addr, reg, val)
 
     def stop(self):
         """Stop Streaming"""
+        self._vsync.detach(self)
         for i2c_addr, reg, val in sg2_ar0234c_mipi_mode.sensor_stop:
             if i2c_addr == sg2_ar0234c_mipi_mode.SENSOR_TABLE_WAIT_MS:
                 time.sleep(val / 1000)  # the val is in ms
@@ -143,6 +151,12 @@ class Ar0234Cam:
                 time.sleep(val / 1000)  # the val is in ms
             else:
                 self.set_register(i2c_addr, reg, val)
+        if self._vsync.is_enabled():
+            for i2c_addr, reg, val in sg2_ar0234c_mipi_mode.sensor_enable_sync:
+                if i2c_addr == sg2_ar0234c_mipi_mode.SENSOR_TABLE_WAIT_MS:
+                    time.sleep(val / 1000)  # the val is in ms
+                else:
+                    self.set_register(i2c_addr, reg, val)
 
     def set_exposure_reg_shs1(self, value=0x0C):
         if value < 0x00:

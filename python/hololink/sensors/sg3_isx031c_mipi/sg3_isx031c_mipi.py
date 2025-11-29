@@ -27,13 +27,15 @@ from . import li_i2c_expander, sg3_isx031c_mipi_mode
 DRIVER_NAME = "SG3_ISX031C_MIPI"
 VERSION = 1.0
 
-class Isx031Cam:
+class Isx031Cam(hololink_module.Synchronizable):
     def __init__(
         self,
         hololink_channel,
         i2c_bus=hololink_module.CAM_I2C_BUS,
         expander_configuration=0,
+        vsync=hololink_module.Synchronizer.null_synchronizer(),
     ):
+        super().__init__()
         self._hololink_channel = hololink_channel
         self._hololink = hololink_channel.hololink()
         self._i2c_bus = i2c_bus
@@ -50,6 +52,7 @@ class Isx031Cam:
             self._i2c_expander_configuration = (
                 li_i2c_expander.I2C_Expander_Output_EN.OUTPUT_1
             )
+        self._vsync = vsync
 
     def setup_clock(self):
         # set the clock driver.
@@ -70,7 +73,7 @@ class Isx031Cam:
     def start(self):
         """Start Streaming"""
         self._running = True
-        #
+        self._vsync.attach(self)
         # Setting these register is time-consuming.
         for i2c_addr, reg, val in sg3_isx031c_mipi_mode.sensor_start:
             if i2c_addr == sg3_isx031c_mipi_mode.SENSOR_TABLE_WAIT_MS:
@@ -80,6 +83,7 @@ class Isx031Cam:
 
     def stop(self):
         """Stop Streaming"""
+        self._vsync.detach(self)
         for i2c_addr, reg, val in sg3_isx031c_mipi_mode.sensor_stop:
             if i2c_addr == sg3_isx031c_mipi_mode.SENSOR_TABLE_WAIT_MS:
                 time.sleep(val / 1000)  # the val is in ms

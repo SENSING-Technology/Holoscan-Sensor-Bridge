@@ -58,6 +58,7 @@ setuptools.setup(
         "hololink/sensors/sg2_ar0234c_mipi",
         "hololink/sensors/sg3_isx031c_mipi",
         "hololink/sensors/sg8_imx678c_mipi",
+        "hololink/sensors/SG10A_AGON_G2M_Ax",
         "tools",
     ],
     ext_modules=[

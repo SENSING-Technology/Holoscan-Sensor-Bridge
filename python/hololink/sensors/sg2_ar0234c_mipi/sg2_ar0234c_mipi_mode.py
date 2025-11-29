@@ -121,6 +121,20 @@ sensor_mode_1920x1200_raw12_4lane_30fps_linear = [
     ( SENSOR_TABLE_WAIT_MS, 0x0000, SENSOR_WAIT_MS ),
 ]
 
+sensor_enable_sync = [
+    ( SENSOR_I2C_ADDRESS, 0x301A, 0x20 ),
+    ( SENSOR_I2C_ADDRESS, 0x301B, 0x58 ),
+    ( SENSOR_TABLE_WAIT_MS, 0x0000, 100 ),
+    ( SENSOR_I2C_ADDRESS, 0x301A, 0x20 ),
+    ( SENSOR_I2C_ADDRESS, 0x301B, 0x5C ),
+    ( SENSOR_I2C_ADDRESS, 0x301A, 0x21 ),
+    ( SENSOR_I2C_ADDRESS, 0x301B, 0x5C ),
+    ( SENSOR_I2C_ADDRESS, 0x301A, 0x29 ),
+    ( SENSOR_I2C_ADDRESS, 0x301B, 0x5C ),
+    ( SENSOR_I2C_ADDRESS, 0x30CE, 0x01 ),
+    ( SENSOR_I2C_ADDRESS, 0x30CF, 0x00 ),
+]
+
 class Sensor_Mode(Enum):
     sensor_mode_1920x1200_raw12_4lane_30fps_linear = 0
     Unknown = 1

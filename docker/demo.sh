@@ -54,6 +54,7 @@ done
 
 docker run \
     -it \
+    --rm \
     --net host \
     --gpus all \
     --runtime=nvidia \

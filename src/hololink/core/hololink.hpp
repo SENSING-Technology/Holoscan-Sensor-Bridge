@@ -372,6 +372,8 @@ public:
         SW_EVENT = 2,
         SIF_0_FRAME_END = 16,
         SIF_1_FRAME_END = 17,
+        SIF_2_FRAME_END = 18,
+        SIF_3_FRAME_END = 19,
     } Event;
 
     /**

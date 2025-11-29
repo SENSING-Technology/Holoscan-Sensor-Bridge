@@ -29,6 +29,7 @@ _MODULES = [
     "sg2_ar0234c_mipi",
     "sg3_isx031c_mipi",
     "sg8_imx678c_mipi",
+    "SG10A_AGON_G2M_Ax",
 ]
 
 _OBJECTS = {
