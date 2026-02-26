@@ -275,7 +275,7 @@ def main():
     channel_metadata_left = hololink_module.Metadata(channel_metadata)
     hololink_module.DataChannel.use_sensor(channel_metadata_left, 0)
     channel_metadata_right = hololink_module.Metadata(channel_metadata)
-    hololink_module.DataChannel.use_sensor(channel_metadata_right, 1)
+    hololink_module.DataChannel.use_sensor(channel_metadata_right, 2)
     #
     hololink_channel_left = hololink_module.DataChannel(channel_metadata_left)
     hololink_channel_right = hololink_module.DataChannel(channel_metadata_right)
@@ -286,7 +286,7 @@ def main():
          hololink_channel_left, expander_configuration=0
     )
     camera_right = sg3_isx031c_mipi.Isx031Cam(
-         hololink_channel_right, expander_configuration=0
+         hololink_channel_right, expander_configuration=1
     )
     
     # Import YUV mode
