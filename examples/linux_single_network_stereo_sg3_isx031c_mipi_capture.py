@@ -357,7 +357,7 @@ def main():
         hololink_channel_left, expander_configuration=0, vsync=vsync,
     )
     camera_right = sg3_isx031c_mipi.Isx031Cam(
-        hololink_channel_right, expander_configuration=0,  vsync=vsync,
+        hololink_channel_right, expander_configuration=1,  vsync=vsync,
     )
     
     # Import YUV mode
