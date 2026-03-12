@@ -325,6 +325,14 @@ def main():
     camera_left.configure(camera_mode)
     camera_right.configure(camera_mode)
 
+    gpio = hololink.get_gpio(channel_metadata_left)
+    gpio_num = gpio.get_supported_pin_num()
+    logging.info(f"{gpio_num=}")
+    gpio.set_direction(0, gpio.OUT)
+    gpio.set_direction(1, gpio.OUT)
+    gpio.set_value(0, gpio.HIGH)
+    gpio.set_value(1, gpio.HIGH)
+
     application.run()
     hololink.stop()
 

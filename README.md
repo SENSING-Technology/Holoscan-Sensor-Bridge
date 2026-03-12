@@ -67,13 +67,13 @@ Currently supported for use on Jetson Agx Thor Devkit with Jetpack 6.0 or later
         <img src="./docs/user_guide/images/SENSING_HSB_Cameras/10.jpg" width="90%" />
     </p>
 
-3. **Power Supply**
+4. **Power Supply**
 
     - Provide 12v power supply to the Jetson AGX Thor DevKit
     - Provide 12v power supply to the Holoscan Sensor Bridge Board (A Type-C Power Supply)
     - Provide 12v power supply to the SENSING MIPI Camera Adapter On Holoscan Sensor Bridge Board
 
-4. **Boot system and Bringup camera**
+5. **Boot system and Bringup camera**
 
     - Please first complete the "Host Setup" described on [extensive user guide](https://docs.nvidia.com/holoscan/sensor-bridge/latest/)
     - Clone this software package onto device
@@ -99,3 +99,22 @@ Currently supported for use on Jetson Agx Thor Devkit with Jetpack 6.0 or later
             ```
             python3 examples/linux_single_network_stereo_sg8_imx678c_mipi_player.py
             ```
+
+6. **Update the FPGA firmware**
+    
+    - Execute the following command at the device terminal to getinto the demo container
+    
+      ```
+      xhost +
+      sh docker/demo.sh
+      ```
+    
+    - Execute the following command to update the FPGA program
+    
+      ```
+      program_lattice_cpnx100 scripts/manifest_local.yaml
+      ```
+    
+    - Enter the required information as per the instructions and confirm the upgrade.
+    
+    
