@@ -50,7 +50,6 @@ Currently supported for use on Jetson Agx Orin Devkit with Jetpack 6.0 or later
 2. **Connect HSB MIPI Camera Onto Holoscan Sensor Bridge Board**
 
     - Connect FPC Cable With HSB MIPI Camera
-    - Currently, only single MIPI cameras can be accepted.(CN1)
 
     <p align="center">
         <img src="./docs/user_guide/images/SENSING_HSB_Cameras/02.jpg" width="90%" />
@@ -64,6 +63,8 @@ Currently supported for use on Jetson Agx Orin Devkit with Jetpack 6.0 or later
 
 3. **Connect all to Jetson Agx Orin Devkit**
 
+
+    - Currently, only single MIPI cameras can be accepted.(CN1)
     <p align="center">
         <img src="./docs/user_guide/images/SENSING_HSB_Cameras/01.jpg" width="90%" />
     </p>
