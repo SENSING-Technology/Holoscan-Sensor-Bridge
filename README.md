@@ -62,6 +62,8 @@ Currently supported for use on Jetson Agx Thor Devkit with Jetpack 6.0 or later
     </p>
 
 3. **Connect all to Jetson Agx Thor Devkit**
+    
+    Currently, only the HSB port 1 is supported for connecting the Thor Devkit.
 
     <p align="center">
         <img src="./docs/user_guide/images/SENSING_HSB_Cameras/10.jpg" width="90%" />
