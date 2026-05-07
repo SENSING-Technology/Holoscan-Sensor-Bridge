@@ -146,7 +146,7 @@ private:
 class BasicEnumerationStrategy
     : public EnumerationStrategy {
 public:
-    BasicEnumerationStrategy(const Metadata& additional_metadata, unsigned total_sensors = 2, unsigned total_dataplanes = 2, unsigned sifs_per_sensor = 2);
+    BasicEnumerationStrategy(const Metadata& additional_metadata, unsigned total_sensors = 4, unsigned total_dataplanes = 4, unsigned sifs_per_sensor = 2);
 
     // Changes whether ptp_enable is true or not.
     void ptp_enable(bool enable);

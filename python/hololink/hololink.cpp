@@ -470,8 +470,9 @@ PYBIND11_MODULE(_hololink, m)
 
     py::enum_<Hololink::Event>(hololink_module, "Event")
         .value("SW_EVENT", Hololink::Event::SW_EVENT)
-        .value("SIF_0_FRAME_END", Hololink::Event::SIF_0_FRAME_END)
-        .value("SIF_1_FRAME_END", Hololink::Event::SIF_1_FRAME_END);
+        .value("SIF_1_FRAME_END", Hololink::Event::SIF_1_FRAME_END)
+        .value("SIF_2_FRAME_END", Hololink::Event::SIF_2_FRAME_END)
+        .value("SIF_3_FRAME_END", Hololink::Event::SIF_3_FRAME_END);
 
     auto gpio = py::class_<Hololink::GPIO, std::shared_ptr<Hololink::GPIO>>(m, "GPIO")
                     .def("set_direction", &Hololink::GPIO::set_direction, "pin"_a, "direction"_a)
@@ -530,12 +531,12 @@ PYBIND11_MODULE(_hololink, m)
 
     py::class_<BasicEnumerationStrategy, std::shared_ptr<BasicEnumerationStrategy>, EnumerationStrategy>(m, "BasicEnumerationStrategy")
         .def(py::init<const Metadata&, unsigned, unsigned, unsigned>(),
-            "additional_metadata"_a, "total_sensors"_a = 2, "total_dataplanes"_a = 2, "sifs_per_sensor"_a = 2)
+            "additional_metadata"_a, "total_sensors"_a = 4, "total_dataplanes"_a = 4, "sifs_per_sensor"_a = 2)
         .def(py::init([](unsigned total_sensors, unsigned total_dataplanes, unsigned sifs_per_sensor) {
             Metadata empty_metadata;
             return std::make_shared<BasicEnumerationStrategy>(empty_metadata, total_sensors, total_dataplanes, sifs_per_sensor);
         }),
-            "total_sensors"_a = 2, "total_dataplanes"_a = 2, "sifs_per_sensor"_a = 2);
+            "total_sensors"_a = 4, "total_dataplanes"_a = 4, "sifs_per_sensor"_a = 2);
 
     // Trampoline class for Synchronizable to allow Python subclasses
     class PySynchronizable : public Synchronizable {

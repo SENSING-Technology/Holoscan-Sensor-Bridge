@@ -65,6 +65,8 @@ namespace hololink::emulation {
 enum DataPlaneID : uint8_t {
     DATA_PLANE_0 = 0,
     DATA_PLANE_1 = 1,
+    DATA_PLANE_2 = 2,
+    DATA_PLANE_3 = 3,
 };
 
 struct HSBConfiguration {
@@ -106,6 +108,8 @@ static inline size_t serialize_hsb_configuration(hololink::core::Serializer& ser
 enum SensorID {
     SENSOR_0 = 0,
     SENSOR_1 = 1,
+    SENSOR_2 = 2,
+    SENSOR_3 = 3,
 };
 
 // straight copied from hololink/core/data_channel.cpp (before the changes for eagle.

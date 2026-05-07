@@ -64,40 +64,58 @@ Currently supported for use on Jetson Agx Orin Devkit with Jetpack 6.0 or later
 3. **Connect all to Jetson Agx Orin Devkit**
 
 
-    - Currently, only single MIPI cameras can be accepted.(CN1)
     <p align="center">
         <img src="./docs/user_guide/images/SENSING_HSB_Cameras/01.jpg" width="90%" />
     </p>
 
-3. **Power Supply**
+4. **Power Supply**
 
     - Provide 12v power supply to the Jetson AGX Orin DevKit
     - Provide 12v power supply to the Holoscan Sensor Bridge Board (A Type-C Power Supply)
     - Provide 12v power supply to the SENSING MIPI Camera Adapter On Holoscan Sensor Bridge Board
 
-4. **Boot system and Bringup camera**
+5. **Boot system and Bringup camera**
 
     - Please first complete the "Host Setup" described on [extensive user guide](https://docs.nvidia.com/holoscan/sensor-bridge/latest/)
     - Clone this software package onto device
-    - Enter the software package path and execute the command "sh docker/build.sh -igpu" to build the Holoscan Sensor Bridge container
+    - Enter the software package path and execute the command "sh docker/build.sh --igpu" to build the Holoscan Sensor Bridge container
     - Execute the following command at the device terminal to getinto the demo container
         ```
         xhost +
         sh docker/demo.sh
         ```
     - Execute the following command to bringup SENSING MIPI Camera
-        
+      
         - For sg2_ar0234c_mipi
             ```
-            python3 examples/linux_sg2_ar0234c_mipi_player.py 
+            python3 examples/linux_single_network_stereo_sg2_ar0234c_mipi_player.py
             ```
         - For sg3_isx031c_mipi
-            
-            *note* : only capturing image data and saving pictures are supported, and pictures will save to "captured_images" folder
+          
+            *note* : only capturing image data and saving pictures are supported, and pictures will save to "captured_images_left" and "captured_images_right" folder
             ```
-            python3 examples/linux_sg3_isx031c_mipi_capture.py
+            python3 examples/linux_single_network_stereo_sg3_isx031c_mipi_player.py
             ```
         - For sg8_imx678c_mipi
             ```
-            python3 examples/linux_sg8_imx678c_mipi_player.py
+            python3 examples/linux_single_network_stereo_sg8_imx678c_mipi_player.py
             ```
+
+6. **Update the FPGA firmware**
+    
+    - Execute the following command at the device terminal to getinto the demo container
+    
+      ```
+      xhost +
+      sh docker/demo.sh
+      ```
+    
+    - Execute the following command to update the FPGA program
+    
+      ```
+      program_lattice_cpnx100 scripts/manifest_local.yaml
+      ```
+    
+    - Enter the required information as per the instructions and confirm the upgrade.
+    
+    

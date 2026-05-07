@@ -695,6 +695,12 @@ void BasicEnumerationStrategy::use_sensor(Metadata& metadata, int64_t sensor_num
     case 1:
         metadata["frame_end_event"] = Hololink::Event::SIF_1_FRAME_END;
         break;
+    case 2:
+        metadata["frame_end_event"] = Hololink::Event::SIF_2_FRAME_END;
+        break;
+    case 3:
+        metadata["frame_end_event"] = Hololink::Event::SIF_3_FRAME_END;
+        break;
     default:
         // Note that we only have frame end events for 0 and 1.
         break;
@@ -754,7 +760,7 @@ void Enumerator::configure_default_enumeration_strategies()
     // For those bootp-v1 configurations, provide default strategies
     Metadata hololink_lite_metadata;
     hololink_lite_metadata["board_description"] = "hololink-lite";
-    hololink_lite_metadata["gpio_pin_count"] = 25;
+    hololink_lite_metadata["gpio_pin_count"] = 26;
     auto hololink_lite_enumeration_strategy = std::make_shared<BasicEnumerationStrategy>(hololink_lite_metadata);
     uuid_strategies_[HOLOLINK_LITE_UUID] = hololink_lite_enumeration_strategy;
 

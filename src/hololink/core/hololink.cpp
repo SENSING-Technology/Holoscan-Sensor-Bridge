@@ -1753,6 +1753,12 @@ void Hololink::Sequencer::assign_location(Hololink::Event event)
     case Hololink::Event::SIF_1_FRAME_END:
         address = APB_RAM + 0x200;
         break;
+    case Hololink::Event::SIF_2_FRAME_END:
+        address = APB_RAM + 0x300;
+        break;
+    case Hololink::Event::SIF_3_FRAME_END:
+        address = APB_RAM + 0x400;
+        break;
     case Hololink::Event::SW_EVENT:
         address = APB_RAM + 0x800;
         break;
@@ -1884,7 +1890,8 @@ void Hololink::PtpSynchronizer::setup()
     hololink_.write_uint32(VSYNC_DELAY, 0); // VSYNC delay (ns)
     hololink_.write_uint32(VSYNC_EXPOSURE, 0xF4240); // Exposure time (1ms)
     hololink_.write_uint32(VSYNC_CONTROL, 1); // Enable VSYNC
-    hololink_.write_uint32(VSYNC_GPIO, 0xF); // Set GPIO as OUT
+    //hololink_.write_uint32(VSYNC_GPIO, 0xF); // Set GPIO as OUT
+    hololink_.write_uint32(VSYNC_GPIO, 0xFF); // Set GPIO3 6 7 8 as VSYNC OUT
 }
 
 void Hololink::PtpSynchronizer::shutdown()

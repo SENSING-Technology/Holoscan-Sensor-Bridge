@@ -23,10 +23,14 @@ namespace hololink::emulation {
 std::map<DataPlaneID, DataPlaneConfiguration> data_plane_map {
     { DATA_PLANE_0, DataPlaneConfiguration { 0x02000300 } },
     { DATA_PLANE_1, DataPlaneConfiguration { 0x02010300 } },
+    { DATA_PLANE_2, DataPlaneConfiguration { 0x02020300 } },
+    { DATA_PLANE_3, DataPlaneConfiguration { 0x02030300 } },
 };
 std::map<SensorID, SensorConfiguration> sensor_map {
     { SENSOR_0, SensorConfiguration { 0, 0x1, hololink::Hololink::Event::SIF_0_FRAME_END, 0x01000000, 0x1000 } },
     { SENSOR_1, SensorConfiguration { 2, 0x4, hololink::Hololink::Event::SIF_1_FRAME_END, 0x01010000, 0x1080 } },
+    { SENSOR_2, SensorConfiguration { 4, 0x10, hololink::Hololink::Event::SIF_1_FRAME_END, 0x01020000, 0x1100 } },
+    { SENSOR_3, SensorConfiguration { 6, 0x40, hololink::Hololink::Event::SIF_1_FRAME_END, 0x01030000, 0x1180 } },
 };
 
 std::map<uint32_t, uint32_t> address_map = {
